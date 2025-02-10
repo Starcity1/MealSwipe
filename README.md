@@ -1,2 +1,2 @@
 # MealSwipe
-CSCE 463 939 Capstone Project
+CSCE 482 939 Capstone Project
