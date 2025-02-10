@@ -1,5 +1,8 @@
 import React, {useEffect,useState} from 'react'
 
+import TinderCard from 'react-tinder-card'
+
+
 
 
 function App(){
