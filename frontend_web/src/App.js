@@ -2,6 +2,9 @@ import React, {useEffect,useState} from 'react'
 
 import TinderCard from 'react-tinder-card'
 
+
+import TinderCard from 'react-tinder-card'
+
 function App(){
 
   const [backendData, setBackendData] = useState(null)
