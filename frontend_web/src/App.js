@@ -1,24 +1,13 @@
 import React, {useEffect,useState} from 'react'
 
-import TinderCard from 'react-tinder-card'
-
-
 
 
 function App(){
 
   const [backendData, setBackendData] = useState(null)
-
-  const onSwipe = (direction) => {
-    console.log('You swiped: ' + direction)
-  }
-  
-  const onCardLeftScreen = (myIdentifier) => {
-    console.log(myIdentifier + ' left the screen')
-  }
   
   useEffect(() => {
-    fetch("http://localhost:5001/api")
+    fetch("http://localhost:5001/api/serve/get-all-restaurants")
       .then(response => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -26,18 +15,20 @@ function App(){
         return response.json();
       })
       .then(data => {
-        console.log("Fetched data:", data);  // Debugging log
         setBackendData(data);
       })
       .catch(error => console.error("Fetch error:", error));
-  }, []);
+    }, []);
+    
+  console.log("Fetched data:", backendData);  // Debugging log
   
-  return (
-    <div >
-      <div className='card-container'>
-      <TinderCard onSwipe={onSwipe} onCardLeftScreen={() => onCardLeftScreen('fooBar')} preventSwipe={['right', 'left']}>Hello, World!</TinderCard>
-
-      </div>
+    return (
+    <div>
+      {!backendData ? (
+        <p>Loading...</p>
+      ) : (
+        backendData
+      )}
     </div>
   );
   
