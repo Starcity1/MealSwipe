@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: us-west-1
-      CDK_STACK: MealSwipeAppStack
+      CDK_STACK: MealSwipeAppService
       ECR_BACKEND_REPO: mealswipe/backend-repo
       ECR_FRONTEND_REPO: mealswipe/frontend-repo
     steps:
