@@ -63,11 +63,11 @@ class MealSwipeAppService extends cdk.Stack {
     });
 
     scalableTarget.scaleOnCpuUtilization('CpuScaling', {
-      targetUtilizationPercent: 70,
+      targetUtilizationPercent: 80,
     });
 
     scalableTarget.scaleOnMemoryUtilization('MemoryScaling', {
-      targetUtilizationPercent: 70,
+      targetUtilizationPercent: 80,
     });
 
     // =========== FRONTEND S3 + CLOUDFRONT SETUP ===========
