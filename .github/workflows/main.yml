@@ -55,7 +55,7 @@ jobs:
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           docker tag $ECR_FRONTEND_REPO:latest public.ecr.aws/p4z9s9e4/mealswipe/$ECR_FRONTEND_REPO:latest
-          docker push public.ecr.aws/p4z9s9e4/mealswipe/$ECR_FRONTEND_REPO-repo:latest
+          docker push public.ecr.aws/p4z9s9e4/mealswipe/$ECR_FRONTEND_REPO:latest
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
