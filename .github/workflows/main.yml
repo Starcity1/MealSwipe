@@ -71,4 +71,5 @@ jobs:
       - name: Deploy CDK Stack
         working-directory: infra
         run: |
+          npx cdk bootstrap aws://$ACCOUNT_ID/us-west-1
           npx cdk deploy $CDK_STACK --require-approval never
