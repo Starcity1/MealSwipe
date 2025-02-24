@@ -31,12 +31,6 @@ class MealSwipeAppService extends cdk.Stack {
       maxCapacity: 4
     });
 
-    // Create private ECR repository for backend
-    const backendRepo = new ecr.Repository(this, 'BackendRepo', {
-      repositoryName: 'mealswipe/backend-repo',
-      removalPolicy: cdk.RemovalPolicy.RETAIN
-    });
-
     // Backend service with load balancer
     const backendService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'BackendService', {
       cluster,
