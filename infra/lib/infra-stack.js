@@ -16,10 +16,12 @@ class MealSwipeAppService extends cdk.Stack {
     // Create an ECS cluster within the VPC
     const cluster = new ecs.Cluster(this, 'MealSwipeCluster', { vpc });
 
-    // Add EC2 capacity to the cluster (e.g., t3.nano instances)
+    // Add EC2 capacity to the cluster (e.g., t3.small instances)
     cluster.addCapacity('DefaultAutoScalingGroup', {
-      instanceType: new ec2.InstanceType('t3.nano'),
+      instanceType: new ec2.InstanceType('t3.small'),
       desiredCapacity: 2,
+      minCapacity: 1,
+      maxCapacity: 4
     });
 
     // Create ECR repositories for backend and frontend images
