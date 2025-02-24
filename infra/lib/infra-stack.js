@@ -4,7 +4,7 @@ const ecs = require('aws-cdk-lib/aws-ecs');
 const ecsPatterns = require('aws-cdk-lib/aws-ecs-patterns');
 const ecr = require('aws-cdk-lib/aws-ecr');
 
-class MyAppStack extends cdk.Stack {
+class MealSwipeAppService extends cdk.Stack {
   constructor(scope, id, props) {
     super(scope, id, props);
 
@@ -27,7 +27,7 @@ class MyAppStack extends cdk.Stack {
     const frontendRepo = new ecr.Repository(this, 'FrontendRepo');
 
     // Define an ECS service with an Application Load Balancer
-    const ecsService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'MealSwipeAppService', {
+    const MealSwipeAppService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'MealSwipeAppService', {
       cluster,
       memoryLimitMiB: 512,
       taskImageOptions: {
@@ -39,9 +39,9 @@ class MyAppStack extends cdk.Stack {
     });
 
     // Grant the ECS task role permissions to pull images from the ECR repositories
-    backendRepo.grantPull(ecsService.taskDefinition.taskRole);
-    frontendRepo.grantPull(ecsService.taskDefinition.taskRole);
+    backendRepo.grantPull(MealSwipeAppService.taskDefinition.taskRole);
+    frontendRepo.grantPull(MealSwipeAppService.taskDefinition.taskRole);
   }
 }
 
-module.exports = { MyAppStack };
+module.exports = { MealSwipeAppService };
