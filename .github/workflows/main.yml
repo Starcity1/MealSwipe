@@ -39,7 +39,7 @@ jobs:
           # Build backend Docker image
           docker build -t $ECR_BACKEND_REPO:latest ./backend
           # Build frontend Docker image
-          docker build -t $ECR_FRONTEND_REPO:latest ./frontend
+          docker build -t $ECR_FRONTEND_REPO:latest ./frontend_web
 
       - name: Login to Amazon ECR
         run: |
