@@ -42,4 +42,4 @@ app.get("/api", (req, res) => {
     res.json({"restaurants" : ["resOne", "resTwo"]});
 });
 
-app.listen(5001, () => console.log("Server started on port 5001"));
+app.listen(80, () => console.log("Server started on port 5001"));

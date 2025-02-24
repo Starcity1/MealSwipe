@@ -41,16 +41,16 @@ class MealSwipeAppService extends cdk.Stack {
     // Backend service with load balancer
     const backendService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'BackendService', {
       cluster,
-      memoryLimitMiB: 512,
-      cpu: 256,
+      memoryLimitMiB: 1024,
+      cpu: 512,
       taskImageOptions: {
         image: ecs.ContainerImage.fromEcrRepository(backendRepo, 'latest'),
-        containerPort: 5001,
+        containerPort: 80,
         environment: {
           NODE_ENV: 'production'
         }
       },
-      publicLoadBalancer: true,
+      // publicLoadBalancer: true,
     });
 
     // Grant the ECS task roles permissions to pull images
