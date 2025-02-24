@@ -16,8 +16,8 @@ jobs:
     env:
       AWS_REGION: us-east-1
       CDK_STACK: MealSwipeAppStack
-      ECR_BACKEND_REPO: my-backend-repo
-      ECR_FRONTEND_REPO: my-frontend-repo
+      ECR_BACKEND_REPO: mealswipe/backend-repo
+      ECR_FRONTEND_REPO: mealswipe/frontend-repo
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
