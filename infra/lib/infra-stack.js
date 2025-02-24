@@ -30,9 +30,10 @@ class MealSwipeAppService extends cdk.Stack {
     const MealSwipeAppService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'MealSwipeAppService', {
       cluster,
       memoryLimitMiB: 512,
+      cpu: 256,
       taskImageOptions: {
         // Replace with your ECR backend image URI
-        image: ecs.ContainerImage.fromRepositoryName('490004633305.dkr.ecr.us-west-1.amazonaws.com/mealswipe/backend-repo:latest'),
+        image: ecs.ContainerImage.fromEcrRepository(backendRepo, 'latest'),
         containerPort: 5001,
       },
       publicLoadBalancer: true,
