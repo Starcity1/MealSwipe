@@ -51,6 +51,10 @@ jobs:
           docker tag $ECR_BACKEND_REPO:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_BACKEND_REPO:latest
           docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_BACKEND_REPO:latest
 
+      - name: Login to Amazon Public ECR
+        run: |
+          aws ecr-public get-login-password --region us-west-1 | docker login --username AWS --password-stdin public.ecr.aws/p4z9s9e4
+
       - name: Tag and Push Frontend Docker Image
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
