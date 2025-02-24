@@ -36,7 +36,6 @@ jobs:
 
       - name: Install Root Dependencies and Build Docker Images
         run: |
-          npm install
           # Build backend Docker image
           docker build -t $ECR_BACKEND_REPO:latest ./backend
           # Build frontend Docker image
