@@ -32,7 +32,7 @@ class MealSwipeAppService extends cdk.Stack {
       memoryLimitMiB: 512,
       taskImageOptions: {
         // Replace with your ECR backend image URI
-        image: ecs.ContainerImage.from_ecr_repository('490004633305.dkr.ecr.us-west-1.amazonaws.com/mealswipe/backend-repo:latest'),
+        image: ecs.ContainerImage.fromRepositoryName('490004633305.dkr.ecr.us-west-1.amazonaws.com/mealswipe/backend-repo:latest'),
         containerPort: 5001,
       },
       publicLoadBalancer: true,
