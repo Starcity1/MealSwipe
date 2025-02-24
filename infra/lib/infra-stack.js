@@ -3,6 +3,13 @@ const ec2 = require('aws-cdk-lib/aws-ec2');
 const ecs = require('aws-cdk-lib/aws-ecs');
 const ecsPatterns = require('aws-cdk-lib/aws-ecs-patterns');
 const ecr = require('aws-cdk-lib/aws-ecr');
+const s3 = require('aws-cdk-lib/aws-s3');
+const cloudfront = require('aws-cdk-lib/aws-cloudfront');
+const origins = require('aws-cdk-lib/aws-cloudfront-origins');
+const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
+const route53 = require('aws-cdk-lib/aws-route53');
+const targets = require('aws-cdk-lib/aws-route53-targets');
+const acm = require('aws-cdk-lib/aws-certificatemanager');
 
 class MealSwipeAppService extends cdk.Stack {
   constructor(scope, id, props) {
@@ -16,7 +23,7 @@ class MealSwipeAppService extends cdk.Stack {
     // Create an ECS cluster within the VPC
     const cluster = new ecs.Cluster(this, 'MealSwipeCluster', { vpc });
 
-    // Add EC2 capacity to the cluster (e.g., t3.small instances)
+    // Add EC2 capacity to the cluster
     cluster.addCapacity('DefaultAutoScalingGroup', {
       instanceType: new ec2.InstanceType('t3.small'),
       desiredCapacity: 2,
@@ -24,26 +31,117 @@ class MealSwipeAppService extends cdk.Stack {
       maxCapacity: 4
     });
 
-    // Create ECR repositories for backend and frontend images
-    const backendRepo = new ecr.Repository(this, 'BackendRepo');
-    const frontendRepo = new ecr.Repository(this, 'FrontendRepo');
+    // Create private ECR repository for backend
+    const backendRepo = new ecr.Repository(this, 'BackendRepo', {
+      repositoryName: 'mealswipe/backend-repo',
+      removalPolicy: cdk.RemovalPolicy.RETAIN
+    });
 
-    // Define an ECS service with an Application Load Balancer
-    const MealSwipeAppService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'MealSwipeAppService', {
+    // Backend service with load balancer
+    const backendService = new ecsPatterns.ApplicationLoadBalancedEc2Service(this, 'BackendService', {
       cluster,
       memoryLimitMiB: 512,
       cpu: 256,
       taskImageOptions: {
-        // Replace with your ECR backend image URI
         image: ecs.ContainerImage.fromEcrRepository(backendRepo, 'latest'),
         containerPort: 5001,
+        environment: {
+          NODE_ENV: 'production'
+        }
       },
       publicLoadBalancer: true,
     });
 
-    // Grant the ECS task role permissions to pull images from the ECR repositories
-    backendRepo.grantPull(MealSwipeAppService.taskDefinition.taskRole);
-    frontendRepo.grantPull(MealSwipeAppService.taskDefinition.taskRole);
+    // Grant the ECS task roles permissions to pull images
+    backendRepo.grantPull(backendService.taskDefinition.taskRole);
+
+    // Add scaling policies for the backend service
+    const scalableTarget = backendService.service.autoScaleTaskCount({
+      minCapacity: 1,
+      maxCapacity: 10,
+    });
+
+    scalableTarget.scaleOnCpuUtilization('CpuScaling', {
+      targetUtilizationPercent: 70,
+    });
+
+    scalableTarget.scaleOnMemoryUtilization('MemoryScaling', {
+      targetUtilizationPercent: 70,
+    });
+
+    // =========== FRONTEND S3 + CLOUDFRONT SETUP ===========
+    
+    // S3 bucket for frontend static files
+    const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
+      bucketName: 'mealswipe-frontend',
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: 'index.html', // SPA support
+      publicReadAccess: false,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      cors: [
+        {
+          allowedOrigins: ['*'],
+          allowedMethods: [s3.HttpMethods.GET],
+          allowedHeaders: ['*'],
+        },
+      ],
+    });
+
+    // CloudFront origin access identity to access the S3 bucket
+    const cloudFrontOAI = new cloudfront.OriginAccessIdentity(this, 'CloudFrontOAI');
+    
+    // Grant the OAI read access to the bucket
+    frontendBucket.grantRead(cloudFrontOAI);
+
+    // Create CloudFront distribution
+    const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
+      defaultBehavior: {
+        origin: new origins.S3Origin(frontendBucket, {
+          originAccessIdentity: cloudFrontOAI
+        }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html', // For SPA routing
+        },
+      ],
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Cheapest option
+      enabled: true,
+    });
+
+    // Add a behavior for API calls to be forwarded to the backend service
+    distribution.addBehavior('/api/*', new origins.LoadBalancerV2Origin(backendService.loadBalancer, {
+      protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+    }), {
+      allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+      originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+    });
+
+    // Output important resources
+    new cdk.CfnOutput(this, 'BackendURL', {
+      value: `http://${backendService.loadBalancer.loadBalancerDnsName}`
+    });
+
+    new cdk.CfnOutput(this, 'FrontendURL', {
+      value: `https://${distribution.distributionDomainName}`
+    });
+
+    new cdk.CfnOutput(this, 'S3BucketName', {
+      value: frontendBucket.bucketName
+    });
+
+    new cdk.CfnOutput(this, 'CloudFrontDistributionId', {
+      value: distribution.distributionId
+    });
   }
 }
 

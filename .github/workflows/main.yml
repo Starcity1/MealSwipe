@@ -17,7 +17,7 @@ jobs:
       AWS_REGION: us-west-1
       CDK_STACK: MealSwipeAppService
       ECR_BACKEND_REPO: mealswipe/backend-repo
-      ECR_FRONTEND_REPO: mealswipe/frontend-repo
+      S3_FRONTEND_BUCKET: mealswipe-frontend
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -34,12 +34,15 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Root Dependencies and Build Docker Images
+      - name: Build Backend Docker Image
         run: |
-          # Build backend Docker image
           docker build -t $ECR_BACKEND_REPO:latest ./backend
-          # Build frontend Docker image
-          docker build -t $ECR_FRONTEND_REPO:latest ./frontend_web
+
+      - name: Build Frontend
+        working-directory: frontend_web
+        run: |
+          npm ci
+          npm run build
 
       - name: Login to Amazon ECR
         run: |
@@ -50,16 +53,6 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           docker tag $ECR_BACKEND_REPO:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_BACKEND_REPO:latest
           docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_BACKEND_REPO:latest
-
-      - name: Login to Amazon Public ECR
-        run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-
-      - name: Tag and Push Frontend Docker Image
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker tag $ECR_FRONTEND_REPO:latest public.ecr.aws/p4z9s9e4/$ECR_FRONTEND_REPO:latest
-          docker push public.ecr.aws/p4z9s9e4/$ECR_FRONTEND_REPO:latest
 
       - name: Install AWS CDK CLI
         run: npm install -g aws-cdk
@@ -74,3 +67,22 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           npx cdk bootstrap aws://$ACCOUNT_ID/us-west-1
           npx cdk deploy $CDK_STACK --require-approval never
+
+      - name: Deploy Frontend to S3
+        run: |
+          # Get the API URL from CloudFormation outputs
+          API_URL=$(aws cloudformation describe-stacks --stack-name $CDK_STACK --query "Stacks[0].Outputs[?OutputKey=='BackendURL'].OutputValue" --output text)
+          
+          # Replace API URL placeholder in the frontend build if needed
+          # This depends on how your frontend handles API connections
+          # For example, you might create a config.js file:
+          echo "window.API_URL = '$API_URL';" > frontend_web/build/config.js
+          
+          # Sync frontend build to S3
+          aws s3 sync frontend_web/build/ s3://$S3_FRONTEND_BUCKET/ --delete
+          
+          # Invalidate CloudFront cache (if CloudFront distribution exists)
+          CLOUDFRONT_DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name $CDK_STACK --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text)
+          if [ ! -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+          fi
