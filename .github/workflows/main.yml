@@ -61,10 +61,10 @@ jobs:
         run: npm install -g aws-cdk
 
       - name: Install CDK Dependencies
-        working-directory: infrastructure
+        working-directory: infra
         run: npm install
 
       - name: Deploy CDK Stack
-        working-directory: infrastructure
+        working-directory: infra
         run: |
           npx cdk deploy $CDK_STACK --require-approval never
