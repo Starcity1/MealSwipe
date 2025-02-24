@@ -44,4 +44,6 @@ class MealSwipeAppService extends cdk.Stack {
   }
 }
 
+aws ecs list-tasks --cluster MealSwipeCluster --service-name MealSwipeAppService --desired-status STOPPED --max-items 10
+
 module.exports = { MealSwipeAppService };
