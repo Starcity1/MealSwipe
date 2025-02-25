@@ -7,6 +7,7 @@ const s3 = require('aws-cdk-lib/aws-s3');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const origins = require('aws-cdk-lib/aws-cloudfront-origins');
 const logs = require('aws-cdk-lib/aws-logs');
+const iam = require('aws-cdk-lib/aws-iam');
 
 class MealSwipeAppService extends cdk.Stack {
   constructor(scope, id, props) {
