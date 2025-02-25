@@ -45,12 +45,24 @@ class MealSwipeAppService extends cdk.Stack {
       cpu: 512,
       taskImageOptions: {
         image: ecs.ContainerImage.fromEcrRepository(backendRepo, 'latest'),
-        containerPort: 80,
+        containerPort: 5000,
         environment: {
           NODE_ENV: 'production'
-        }
+        },
+        // Adding healthcheck to ensure connection to ECR container works.dd
+        healthCheck: {
+          command: ["CMD-SHELL", "curl -X GET -f http://localhost:5000/health || exit 1"],
+          interval: cdk.Duration.seconds(30),
+          retries: 3,
+          timeout: cdk.Duration.minutes(3)
+        },
+        // Adding logging for debugging
+        enableLogging: true,
+        logDriver: ecs.LogDrivers.awsLogs({
+          streamPrefix: 'backend-service',
+          logRetention: logs.RetentionDays.ONE_WEEK
+        })
       },
-      // publicLoadBalancer: true,
     });
 
     // Grant the ECS task roles permissions to pull images
@@ -98,7 +110,7 @@ class MealSwipeAppService extends cdk.Stack {
     // Create CloudFront distribution
     const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(frontendBucket, {
+        origin: new origins.S3BucketOrigin(frontendBucket, {
           originAccessIdentity: cloudFrontOAI
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
