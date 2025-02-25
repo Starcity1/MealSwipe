@@ -6,10 +6,7 @@ const ecr = require('aws-cdk-lib/aws-ecr');
 const s3 = require('aws-cdk-lib/aws-s3');
 const cloudfront = require('aws-cdk-lib/aws-cloudfront');
 const origins = require('aws-cdk-lib/aws-cloudfront-origins');
-const s3deploy = require('aws-cdk-lib/aws-s3-deployment');
-const route53 = require('aws-cdk-lib/aws-route53');
-const targets = require('aws-cdk-lib/aws-route53-targets');
-const acm = require('aws-cdk-lib/aws-certificatemanager');
+const logs = require('aws-cdk-lib/aws-logs');
 
 class MealSwipeAppService extends cdk.Stack {
   constructor(scope, id, props) {
