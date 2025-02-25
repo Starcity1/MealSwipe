@@ -88,23 +88,6 @@ class MealSwipeAppService extends cdk.Stack {
     });
 
     // =========== FRONTEND S3 + CLOUDFRONT SETUP ===========
-    
-    // // S3 bucket for frontend static files
-    // const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
-    //   bucketName: 'mealswipe-frontend',
-    //   websiteIndexDocument: 'index.html',
-    //   websiteErrorDocument: 'index.html', // SPA support
-    //   publicReadAccess: false,
-    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    //   removalPolicy: cdk.RemovalPolicy.RETAIN,
-    //   cors: [
-    //     {
-    //       allowedOrigins: ['*'],
-    //       allowedMethods: [s3.HttpMethods.GET],
-    //       allowedHeaders: ['*'],
-    //     },
-    //   ],
-    // });
 
     // Import the existing bucket:
     const frontendBucket = s3.Bucket.fromBucketName(
@@ -119,27 +102,38 @@ class MealSwipeAppService extends cdk.Stack {
     // Grant the OAI read access to the bucket
     frontendBucket.grantRead(cloudFrontOAI);
 
-    // Create CloudFront distribution
-    const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
-      defaultBehavior: {
-        origin: new origins.S3BucketOrigin(frontendBucket, {
-          originAccessIdentity: cloudFrontOAI
-        }),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      errorResponses: [
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html', // For SPA routing
+    // Check if CloudFront exists, otherwise create CloudFront distribution 
+    const distributionId = this.node.tryGetContext('frontendDistributionID');
+    
+    let distribution;
+    if (distributionId) {
+      // Import existing distribution
+      distribution = cloudfront.Distribution.fromDistributionAttributes(this, 'FrontendDistribution', {
+        distributionId: distributionId,
+        domainName: `${distributionId}.cloudfront.net`
+      });
+    } else {
+      const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
+        defaultBehavior: {
+          origin: new origins.S3BucketOrigin(frontendBucket, {
+            originAccessIdentity: cloudFrontOAI
+          }),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         },
-      ],
-      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Cheapest option
-      enabled: true,
-    });
+        errorResponses: [
+          {
+            httpStatus: 404,
+            responseHttpStatus: 200,
+            responsePagePath: '/index.html', // For SPA routing
+          },
+        ],
+        priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // Cheapest option
+        enabled: true,
+      });
+    }
 
     // Add a behavior for API calls to be forwarded to the backend service
     distribution.addBehavior('/api/*', new origins.LoadBalancerV2Origin(backendService.loadBalancer, {

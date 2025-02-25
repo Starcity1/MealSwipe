@@ -73,12 +73,18 @@ jobs:
           aws cloudformation delete-stack --stack-name $CDK_STACK
           aws cloudformation wait stack-delete-complete --stack-name $CDK_STACK
 
+      - name: Get existing CloudFront distribution ID
+        id: get-distribution
+        run: |
+          DIST_ID=$(aws cloudformation describe-stacks --stack-name $CDK_STACK --query "Stacks[0].Outputs[?OutputKey=='FrontendDistributionId'].OutputValue" --output text 2>/dev/null || echo "")
+          echo "DISTRIBUTION_ID=$DIST_ID" >> $GITHUB_ENV
+
       - name: Deploy CDK Stack
         working-directory: infra
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           npx cdk bootstrap aws://$ACCOUNT_ID/$AWS_REGION
-          npx cdk deploy $CDK_STACK --require-approval never
+          npx cdk deploy $CDK_STACK --require-approval never --context retainResources=true --context frontendDistributionId=${{ env.DISTRIBUTION_ID }}
 
       - name: Deploy Frontend to S3
         run: |
