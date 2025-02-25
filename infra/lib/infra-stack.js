@@ -118,7 +118,7 @@ class MealSwipeAppService extends cdk.Stack {
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
     );
 
-    pdateBucketPolicyRole.addToPolicy(new iam.PolicyStatement({
+    updateBucketPolicyRole.addToPolicy(new iam.PolicyStatement({
       actions: ['s3:GetBucketPolicy', 's3:PutBucketPolicy'],
       resources: [frontendBucket.bucketArn]
     }));
