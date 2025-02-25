@@ -89,22 +89,29 @@ class MealSwipeAppService extends cdk.Stack {
 
     // =========== FRONTEND S3 + CLOUDFRONT SETUP ===========
     
-    // S3 bucket for frontend static files
-    const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
-      bucketName: 'mealswipe-frontend',
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: 'index.html', // SPA support
-      publicReadAccess: false,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      cors: [
-        {
-          allowedOrigins: ['*'],
-          allowedMethods: [s3.HttpMethods.GET],
-          allowedHeaders: ['*'],
-        },
-      ],
-    });
+    // // S3 bucket for frontend static files
+    // const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
+    //   bucketName: 'mealswipe-frontend',
+    //   websiteIndexDocument: 'index.html',
+    //   websiteErrorDocument: 'index.html', // SPA support
+    //   publicReadAccess: false,
+    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    //   removalPolicy: cdk.RemovalPolicy.RETAIN,
+    //   cors: [
+    //     {
+    //       allowedOrigins: ['*'],
+    //       allowedMethods: [s3.HttpMethods.GET],
+    //       allowedHeaders: ['*'],
+    //     },
+    //   ],
+    // });
+
+    // Import the existing bucket:
+    const frontendBucket = s3.Bucket.fromBucketName(
+      this, 
+      'FrontendBucket', 
+      'mealswipe-frontend'
+    );
 
     // CloudFront origin access identity to access the S3 bucket
     const cloudFrontOAI = new cloudfront.OriginAccessIdentity(this, 'CloudFrontOAI');

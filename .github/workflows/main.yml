@@ -77,7 +77,7 @@ jobs:
         working-directory: infra
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          npx cdk bootstrap aws://$ACCOUNT_ID/us-west-1
+          npx cdk bootstrap aws://$ACCOUNT_ID/$AWS_REGION
           npx cdk deploy $CDK_STACK --require-approval never
 
       - name: Deploy Frontend to S3
