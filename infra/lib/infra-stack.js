@@ -110,6 +110,17 @@ class MealSwipeAppService extends cdk.Stack {
       resources: [`${frontendBucket.bucketArn}/*`]
     });
 
+    // Create a bucket policy document that includes our statement
+    const policyDocument = new iam.PolicyDocument({
+      statements: [bucketPolicyStatement]
+    });
+
+    // Apply the policy to the bucket using BucketPolicy construct
+    new s3.BucketPolicy(this, 'BucketPolicy', {
+      bucket: frontendBucket,
+      policyDocument: policyDocument
+    });
+
     const updateBucketPolicyRole = new iam.Role(this, 'UpdateBucketPolicyRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
     });
