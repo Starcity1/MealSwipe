@@ -61,6 +61,18 @@ jobs:
         working-directory: infra
         run: npm install
 
+      - name: Check CDK stack status
+        id: check-stack
+        run: |
+          STATUS=$(aws cloudformation describe-stacks --stack-name $CDK_STACK --query "Stacks[0].StackStatus" --output text || echo "STACK_NOT_FOUND")
+          echo "STACK_STATUS=$STATUS" >> $GITHUB_ENV
+          
+      - name: Delete CDK stack if in rollback state
+        if: env.STACK_STATUS == 'ROLLBACK_COMPLETE'
+        run: |
+          aws cloudformation delete-stack --stack-name $CDK_STACK
+          aws cloudformation wait stack-delete-complete --stack-name $CDK_STACK
+
       - name: Deploy CDK Stack
         working-directory: infra
         run: |
