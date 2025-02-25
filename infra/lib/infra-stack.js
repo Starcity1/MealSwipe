@@ -100,25 +100,22 @@ class MealSwipeAppService extends cdk.Stack {
     // CloudFront origin access identity to access the S3 bucket
     const cloudFrontOAI = new cloudfront.OriginAccessIdentity(this, 'CloudFrontOAI');
     
-    // Create read bucket policy.
-    const bucketPolicyStatement = new iam.PolicyStatement({
-      actions: ['s3:GetObject'],
-      effect: iam.Effect.ALLOW,
-      principals: [
-        new iam.CanonicalUserPrincipal(cloudFrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)
-      ],
-      resources: [`${frontendBucket.bucketArn}/*`]
-    });
-
-    // Create a bucket policy document that includes our statement
-    const policyDocument = new iam.PolicyDocument({
-      statements: [bucketPolicyStatement]
-    });
 
     // Apply the policy to the bucket using BucketPolicy construct
     new s3.BucketPolicy(this, 'BucketPolicy', {
       bucket: frontendBucket,
-      policyDocument: policyDocument
+      policyDocument: new iam.PolicyDocument({
+        statements: [
+          new iam.PolicyStatement({
+            actions: ['s3:GetObject'],
+            effect: iam.Effect.ALLOW,
+            principals: [
+              new iam.CanonicalUserPrincipal(cloudFrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)
+            ],
+            resources: [`${frontendBucket.bucketArn}/*`]
+          })
+        ]
+      })
     });
 
     const updateBucketPolicyRole = new iam.Role(this, 'UpdateBucketPolicyRole', {
