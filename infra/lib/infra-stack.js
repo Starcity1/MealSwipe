@@ -139,6 +139,7 @@ class MealSwipeAppService extends cdk.Stack {
           origin: new origins.S3BucketOrigin(frontendBucket, {
             originAccessIdentity: cloudFrontOAI
           }),
+          defaultRootObject: 'index.html',
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
