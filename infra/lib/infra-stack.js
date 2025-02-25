@@ -99,8 +99,28 @@ class MealSwipeAppService extends cdk.Stack {
     // CloudFront origin access identity to access the S3 bucket
     const cloudFrontOAI = new cloudfront.OriginAccessIdentity(this, 'CloudFrontOAI');
     
-    // Grant the OAI read access to the bucket
-    frontendBucket.grantRead(cloudFrontOAI);
+    // Create read bucket policy.
+    const bucketPolicyStatement = new iam.PolicyStatement({
+      actions: ['s3:GetObject'],
+      effect: iam.Effect.ALLOW,
+      principals: [
+        new iam.CanonicalUserPrincipal(cloudFrontOAI.cloudFrontOriginAccessIdentityS3CanonicalUserId)
+      ],
+      resources: [`${frontendBucket.bucketArn}/*`]
+    });
+
+    const updateBucketPolicyRole = new iam.Role(this, 'UpdateBucketPolicyRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com')
+    });
+
+    updateBucketPolicyRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+    );
+
+    pdateBucketPolicyRole.addToPolicy(new iam.PolicyStatement({
+      actions: ['s3:GetBucketPolicy', 's3:PutBucketPolicy'],
+      resources: [frontendBucket.bucketArn]
+    }));
 
     // Check if CloudFront exists, otherwise create CloudFront distribution 
     const distributionId = this.node.tryGetContext('frontendDistributionID');
@@ -113,7 +133,7 @@ class MealSwipeAppService extends cdk.Stack {
         domainName: `${distributionId}.cloudfront.net`
       });
     } else {
-      const distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
+        distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
         defaultBehavior: {
           origin: new origins.S3BucketOrigin(frontendBucket, {
             originAccessIdentity: cloudFrontOAI
