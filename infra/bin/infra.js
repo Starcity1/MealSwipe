@@ -3,7 +3,11 @@
 const cdk = require('aws-cdk-lib');
 const { MealSwipeAppService } = require('../lib/infra-stack');
 
-const app = new cdk.App();
+const app = new cdk.App({
+  context: {
+    '@aws-cdk/core:preserveLogicalIds': true
+  }
+});
 new MealSwipeAppService(app, 'MealSwipeAppService', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,

@@ -62,6 +62,14 @@ class MealSwipeAppService extends cdk.Stack {
       },
     });
 
+    // For your backend service
+    backendService.node.addDependency(
+      new cdk.CfnOutput(this, 'BackendServiceRetentionPolicy', {
+        value: 'RETAIN',
+        exportName: 'BackendServiceRetention'
+      })
+    );
+
     // Grant the ECS task roles permissions to pull images
     backendRepo.grantPull(backendService.taskDefinition.taskRole);
 
