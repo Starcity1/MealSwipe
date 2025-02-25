@@ -146,10 +146,11 @@ class MealSwipeAppService extends cdk.Stack {
         distribution = new cloudfront.Distribution(this, 'FrontendDistribution', {
         defaultBehavior: {
           origin: new origins.S3BucketOrigin(frontendBucket, {
-            originAccessIdentity: cloudFrontOAI
+            originAccessIdentity: cloudFrontOAI,
           }),
           defaultRootObject: 'index.html',
-          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          // TODO: Allow and add HTTPS communication.
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.ALLOW_ALL,
           allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
@@ -171,8 +172,8 @@ class MealSwipeAppService extends cdk.Stack {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
     }), {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      // TODO: Add HTTP communication.
-      // viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      // TODO: Allow and add HTTPS communication.
+      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.ALLOW_ALL,
       cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
       originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
     });
