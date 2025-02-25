@@ -3,13 +3,13 @@ import Restaurant from "./Restaurant";
 // import TinderCard from 'react-tinder-card'
 
 const DEV_MODE = false
-const backendURLL = (DEV_MODE) ? "http://localhost:5001/"  : "http://MealSw-Backe-9SpoQVvYFdsw-617506798.us-west-1.elb.amazonaws.com/";
+const backendURL = (DEV_MODE) ? "http://localhost:5001/"  : "http://MealSw-Backe-9SpoQVvYFdsw-617506798.us-west-1.elb.amazonaws.com/";
 
 function App() {
   const [backendData, setBackendData] = useState([]);
 
   useEffect(() => {
-    fetch(DEV_MODE + "api/serve/get-all-restaurants")
+    fetch(backendURL + "api/serve/get-all-restaurants")
       .then(response => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
