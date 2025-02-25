@@ -171,7 +171,8 @@ class MealSwipeAppService extends cdk.Stack {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
     }), {
       allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-      viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      // TODO: Add HTTP communication.
+      // viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
       originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
     });
